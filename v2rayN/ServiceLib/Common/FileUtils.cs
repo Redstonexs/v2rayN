@@ -1,10 +1,10 @@
-using System.Formats.Tar;
 using System.IO.Compression;
 
 namespace ServiceLib.Common;
 
 public static class FileUtils
 {
+    private const int TarBlockSize = 512;
     private static readonly string _tag = "FileManager";
 
     public static bool ByteArrayToFile(string fileName, byte[] content)
@@ -57,7 +57,7 @@ public static class FileUtils
         {
             using var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
             using var gz = new GZipStream(fs, CompressionMode.Decompress, leaveOpen: true);
-            TarFile.ExtractToDirectory(gz, toPath, overwriteFiles: true);
+            ExtractTarArchive(gz, toPath);
         }
         catch (Exception ex)
         {
@@ -245,5 +245,158 @@ public static class FileUtils
         await Utils.SetLinuxChmod(shFilePath);
 
         return shFilePath;
+    }
+
+    // Parse the tar stream directly so the net6 build does not depend on System.Formats.Tar.
+    private static void ExtractTarArchive(Stream tarStream, string destinationDirectory)
+    {
+        var destinationRoot = Path.GetFullPath(destinationDirectory);
+        _ = Directory.CreateDirectory(destinationRoot);
+
+        var header = new byte[TarBlockSize];
+        while (true)
+        {
+            var bytesRead = ReadBlock(tarStream, header);
+            if (bytesRead == 0)
+            {
+                break;
+            }
+            if (bytesRead != TarBlockSize)
+            {
+                throw new InvalidDataException("Unexpected end of tar archive.");
+            }
+            if (header.All(static b => b == 0))
+            {
+                break;
+            }
+
+            var entryName = GetTarEntryName(header);
+            var size = ParseTarOctal(header, 124, 12);
+            var typeFlag = header[156];
+            var isDirectory = typeFlag == (byte)'5' || entryName.EndsWith("/", StringComparison.Ordinal);
+            var dataHandled = false;
+
+            if (entryName.IsNotEmpty())
+            {
+                var entryPath = GetTarEntryPath(destinationRoot, entryName);
+                if (isDirectory)
+                {
+                    _ = Directory.CreateDirectory(entryPath);
+                }
+                else if (typeFlag is 0 or (byte)'0')
+                {
+                    var parentDirectory = Path.GetDirectoryName(entryPath);
+                    if (parentDirectory.IsNotEmpty())
+                    {
+                        _ = Directory.CreateDirectory(parentDirectory);
+                    }
+
+                    using var output = new FileStream(entryPath, FileMode.Create, FileAccess.Write);
+                    CopyBytes(tarStream, output, size);
+                    dataHandled = true;
+                }
+            }
+
+            if (!dataHandled && size > 0)
+            {
+                SkipBytes(tarStream, size);
+            }
+
+            var padding = GetTarPadding(size);
+            if (padding > 0)
+            {
+                SkipBytes(tarStream, padding);
+            }
+        }
+    }
+
+    private static string GetTarEntryName(byte[] header)
+    {
+        var name = GetTarString(header, 0, 100);
+        var prefix = GetTarString(header, 345, 155);
+        return prefix.IsNotEmpty() ? $"{prefix}/{name}" : name;
+    }
+
+    private static string GetTarString(byte[] buffer, int offset, int length)
+    {
+        return Encoding.UTF8.GetString(buffer, offset, length).TrimEnd('\0', ' ');
+    }
+
+    private static long ParseTarOctal(byte[] buffer, int offset, int length)
+    {
+        var value = GetTarString(buffer, offset, length).Trim();
+        return value.IsNullOrEmpty() ? 0 : Convert.ToInt64(value, 8);
+    }
+
+    private static string GetTarEntryPath(string destinationRoot, string entryName)
+    {
+        var relativePath = entryName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(destinationRoot, relativePath));
+        var normalizedRoot = destinationRoot.EndsWith(Path.DirectorySeparatorChar)
+            ? destinationRoot
+            : destinationRoot + Path.DirectorySeparatorChar;
+
+        if (!fullPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(fullPath, destinationRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException($"Tar entry escapes destination directory: {entryName}");
+        }
+
+        return fullPath;
+    }
+
+    private static int ReadBlock(Stream stream, byte[] buffer)
+    {
+        var totalRead = 0;
+        while (totalRead < buffer.Length)
+        {
+            var read = stream.Read(buffer, totalRead, buffer.Length - totalRead);
+            if (read == 0)
+            {
+                break;
+            }
+            totalRead += read;
+        }
+
+        return totalRead;
+    }
+
+    private static void CopyBytes(Stream input, Stream output, long bytesToCopy)
+    {
+        var buffer = new byte[81920];
+        var remaining = bytesToCopy;
+        while (remaining > 0)
+        {
+            var read = input.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining));
+            if (read == 0)
+            {
+                throw new EndOfStreamException("Unexpected end of tar entry data.");
+            }
+
+            output.Write(buffer, 0, read);
+            remaining -= read;
+        }
+    }
+
+    private static void SkipBytes(Stream input, long bytesToSkip)
+    {
+        var buffer = new byte[81920];
+        var remaining = bytesToSkip;
+        while (remaining > 0)
+        {
+            var read = input.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining));
+            if (read == 0)
+            {
+                throw new EndOfStreamException("Unexpected end of tar archive.");
+            }
+
+            remaining -= read;
+        }
+    }
+
+    private static long GetTarPadding(long size)
+    {
+        var remainder = size % TarBlockSize;
+        return remainder == 0 ? 0 : TarBlockSize - remainder;
     }
 }
