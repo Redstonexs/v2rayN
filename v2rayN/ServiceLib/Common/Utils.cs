@@ -1186,11 +1186,6 @@ public class Utils
         {
             return null;
         }
-        if (SetUnixFileMode(fileName))
-        {
-            Logging.SaveLog($"Successfully set the file execution permission, {fileName}");
-            return string.Empty;
-        }
 
         if (fileName.Contains(' '))
         {
@@ -1202,24 +1197,6 @@ public class Utils
 
     public static bool SetUnixFileMode(string? fileName)
     {
-        try
-        {
-            if (fileName.IsNullOrEmpty())
-            {
-                return false;
-            }
-
-            if (File.Exists(fileName))
-            {
-                var currentMode = File.GetUnixFileMode(fileName);
-                File.SetUnixFileMode(fileName, currentMode | UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute);
-                return true;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog("SetUnixFileMode", ex);
-        }
         return false;
     }
 

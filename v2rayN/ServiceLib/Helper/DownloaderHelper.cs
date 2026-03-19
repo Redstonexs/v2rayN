@@ -25,7 +25,7 @@ public class DownloaderHelper
         var downloadOpt = new DownloadConfiguration()
         {
             Timeout = timeout * 1000,
-            MaxTryAgainOnFailure = 2,
+            MaxTryAgainOnFailover = 2,
             RequestConfiguration =
                 {
                     Headers = headers,
@@ -35,7 +35,7 @@ public class DownloaderHelper
                 }
         };
 
-        await using var downloader = new Downloader.DownloadService(downloadOpt);
+        using var downloader = new Downloader.DownloadService(downloadOpt);
         downloader.DownloadFileCompleted += (sender, value) =>
         {
             if (value.Error != null)
@@ -64,7 +64,7 @@ public class DownloaderHelper
         var downloadOpt = new DownloadConfiguration()
         {
             Timeout = timeout * 1000,
-            MaxTryAgainOnFailure = 2,
+            MaxTryAgainOnFailover = 2,
             RequestConfiguration =
                 {
                     Timeout= timeout * 1000,
@@ -75,7 +75,7 @@ public class DownloaderHelper
         var lastUpdateTime = DateTime.Now;
         var hasValue = false;
         double maxSpeed = 0;
-        await using var downloader = new Downloader.DownloadService(downloadOpt);
+        using var downloader = new Downloader.DownloadService(downloadOpt);
 
         downloader.DownloadProgressChanged += (sender, value) =>
         {
@@ -141,7 +141,7 @@ public class DownloaderHelper
         var downloadOpt = new DownloadConfiguration()
         {
             Timeout = timeout * 1000,
-            MaxTryAgainOnFailure = 2,
+            MaxTryAgainOnFailover = 2,
             RequestConfiguration =
                 {
                     Timeout= timeout * 1000,
@@ -151,7 +151,7 @@ public class DownloaderHelper
 
         var progressPercentage = 0;
         var hasValue = false;
-        await using var downloader = new Downloader.DownloadService(downloadOpt);
+        using var downloader = new Downloader.DownloadService(downloadOpt);
         downloader.DownloadStarted += (sender, value) => progress?.Report(0);
         downloader.DownloadProgressChanged += (sender, value) =>
         {

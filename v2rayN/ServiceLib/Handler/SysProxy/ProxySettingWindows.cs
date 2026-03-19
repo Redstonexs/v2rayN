@@ -127,7 +127,7 @@ public static class ProxySettingWindows
         }
         else
         {
-            list.szConnection = nint.Zero;
+            list.szConnection = IntPtr.Zero;
         }
         list.dwOptionCount = options.Length;
         list.dwOptionError = 0;
@@ -138,16 +138,8 @@ public static class ProxySettingWindows
                                                                            // copy the array over into that spot in memory ...
         for (var i = 0; i < options.Length; ++i)
         {
-            if (Environment.Is64BitOperatingSystem)
-            {
-                var opt = new nint(optionsPtr.ToInt64() + (i * optSize));
-                Marshal.StructureToPtr(options[i], opt, false);
-            }
-            else
-            {
-                var opt = new nint(optionsPtr.ToInt32() + (i * optSize));
-                Marshal.StructureToPtr(options[i], opt, false);
-            }
+            var opt = IntPtr.Add(optionsPtr, i * optSize);
+            Marshal.StructureToPtr(options[i], opt, false);
         }
 
         list.options = optionsPtr;
@@ -157,7 +149,7 @@ public static class ProxySettingWindows
         Marshal.StructureToPtr(list, ipcoListPtr, false);
 
         // and finally, call the API method!
-        var isSuccess = NativeMethods.InternetSetOption(nint.Zero,
+        var isSuccess = NativeMethods.InternetSetOption(IntPtr.Zero,
            InternetOption.INTERNET_OPTION_PER_CONNECTION_OPTION,
            ipcoListPtr, list.dwSize);
         var returnvalue = 0; // ERROR_SUCCESS
@@ -168,12 +160,12 @@ public static class ProxySettingWindows
         else
         {
             // Notify the system that the registry settings have been changed and cause them to be refreshed
-            _ = NativeMethods.InternetSetOption(nint.Zero, InternetOption.INTERNET_OPTION_SETTINGS_CHANGED, nint.Zero, 0);
-            _ = NativeMethods.InternetSetOption(nint.Zero, InternetOption.INTERNET_OPTION_REFRESH, nint.Zero, 0);
+            _ = NativeMethods.InternetSetOption(IntPtr.Zero, InternetOption.INTERNET_OPTION_SETTINGS_CHANGED, IntPtr.Zero, 0);
+            _ = NativeMethods.InternetSetOption(IntPtr.Zero, InternetOption.INTERNET_OPTION_REFRESH, IntPtr.Zero, 0);
         }
 
         // FREE the data ASAP
-        if (list.szConnection != nint.Zero)
+        if (list.szConnection != IntPtr.Zero)
         {
             Marshal.FreeHGlobal(list.szConnection); // release mem 3
         }

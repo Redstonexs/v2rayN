@@ -5,12 +5,12 @@ namespace ServiceLib.Services;
 /// </summary>
 public sealed class WindowsJobService : IDisposable
 {
-    private nint handle = nint.Zero;
+    private IntPtr handle = IntPtr.Zero;
 
     public WindowsJobService()
     {
-        handle = CreateJobObject(nint.Zero, null);
-        var extendedInfoPtr = nint.Zero;
+        handle = CreateJobObject(IntPtr.Zero, null);
+        var extendedInfoPtr = IntPtr.Zero;
         var info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
         {
             LimitFlags = 0x2000
@@ -36,14 +36,14 @@ public sealed class WindowsJobService : IDisposable
         }
         finally
         {
-            if (extendedInfoPtr != nint.Zero)
+            if (extendedInfoPtr != IntPtr.Zero)
             {
                 Marshal.FreeHGlobal(extendedInfoPtr);
             }
         }
     }
 
-    public bool AddProcess(nint processHandle)
+    public bool AddProcess(IntPtr processHandle)
     {
         var succ = AssignProcessToJobObject(handle, processHandle);
 
@@ -83,10 +83,10 @@ public sealed class WindowsJobService : IDisposable
             // no managed objects to free
         }
 
-        if (handle != nint.Zero)
+        if (handle != IntPtr.Zero)
         {
             CloseHandle(handle);
-            handle = nint.Zero;
+            handle = IntPtr.Zero;
         }
     }
 
@@ -100,17 +100,17 @@ public sealed class WindowsJobService : IDisposable
     #region Interop
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    private static extern nint CreateJobObject(nint a, string? lpName);
+    private static extern IntPtr CreateJobObject(IntPtr a, string? lpName);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool SetInformationJobObject(nint hJob, JobObjectInfoType infoType, nint lpJobObjectInfo, uint cbJobObjectInfoLength);
+    private static extern bool SetInformationJobObject(IntPtr hJob, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, uint cbJobObjectInfoLength);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool AssignProcessToJobObject(nint job, nint process);
+    private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool CloseHandle(nint hObject);
+    private static extern bool CloseHandle(IntPtr hObject);
 
     #endregion Interop
 }
@@ -144,7 +144,7 @@ internal struct JOBOBJECT_BASIC_LIMIT_INFORMATION
 public struct SECURITY_ATTRIBUTES
 {
     public uint nLength;
-    public nint lpSecurityDescriptor;
+    public IntPtr lpSecurityDescriptor;
     public int bInheritHandle;
 }
 

@@ -69,7 +69,7 @@ public sealed class HotkeyManager
 
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                isSuccess = RegisterHotKey(nint.Zero, _hotkeyCode, hotkeyInfo.fsModifiers, hotkeyInfo.vKey);
+                isSuccess = RegisterHotKey(IntPtr.Zero, _hotkeyCode, hotkeyInfo.fsModifiers, hotkeyInfo.vKey);
             });
             foreach (var name in hotkeyInfo.Names)
             {
@@ -93,7 +93,7 @@ public sealed class HotkeyManager
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                UnregisterHotKey(nint.Zero, hotkey);
+                UnregisterHotKey(IntPtr.Zero, hotkey);
             });
         }
         Init();
