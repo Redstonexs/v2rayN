@@ -40,9 +40,8 @@ public partial class App : Application
 
         AppManager.Instance.InitComponents();
 
-        RxAppBuilder.CreateReactiveUIBuilder()
-            .WithWpf()
-            .BuildApp();
+        Locator.CurrentMutable.InitializeReactiveUI();
+        Locator.CurrentMutable.RegisterViewsForViewModels(typeof(App).Assembly);
 
         base.OnStartup(e);
     }

@@ -22,7 +22,7 @@ global using Avalonia.Threading;
 global using DynamicData;
 global using MsBox.Avalonia.Enums;
 global using ReactiveUI;
-global using ReactiveUI.Avalonia;
+global using Avalonia.ReactiveUI;
 global using ReactiveUI.Fody.Helpers;
 global using ServiceLib;
 global using ServiceLib.Base;

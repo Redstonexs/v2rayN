@@ -15,7 +15,7 @@
 		</PackageReference>
 		<PackageReference Include="Avalonia.Desktop" />
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
-		<PackageReference Include="ReactiveUI.Avalonia" />
+		<PackageReference Include="Avalonia.ReactiveUI" />
 		<PackageReference Include="MessageBox.Avalonia" />
 		<PackageReference Include="Semi.Avalonia" />
 		<PackageReference Include="Semi.Avalonia.AvaloniaEdit" />
