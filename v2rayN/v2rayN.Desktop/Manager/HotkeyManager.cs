@@ -1,3 +1,22 @@
+#if NET6_0
+namespace v2rayN.Desktop.Manager;
+
+public sealed class HotkeyManager
+{
+    private static readonly Lazy<HotkeyManager> _instance = new(() => new());
+    public static HotkeyManager Instance = _instance.Value;
+
+    public bool IsPause { get; set; } = false;
+
+    public void Init(Config config, Action<EGlobalHotkey> updateFunc)
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+}
+#else
 using Avalonia.Win32.Input;
 using GlobalHotKeys;
 
@@ -85,3 +104,4 @@ public sealed class HotkeyManager
         }
     }
 }
+#endif
