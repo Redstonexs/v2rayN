@@ -156,7 +156,8 @@ public class DownloadService
             }
 
             using var cts = new CancellationTokenSource();
-            var result = await client.GetStringAsync(url, cts.Token).WaitAsync(TimeSpan.FromSeconds(timeout), cts.Token);
+            cts.CancelAfter(TimeSpan.FromSeconds(timeout));
+            var result = await client.GetStringAsync(url, cts.Token);
             return result;
         }
         catch (Exception ex)

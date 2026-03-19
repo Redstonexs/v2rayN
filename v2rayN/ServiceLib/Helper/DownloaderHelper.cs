@@ -24,13 +24,13 @@ public class DownloaderHelper
 
         var downloadOpt = new DownloadConfiguration()
         {
-            BlockTimeout = timeout * 1000,
+            Timeout = timeout * 1000,
             MaxTryAgainOnFailure = 2,
             RequestConfiguration =
                 {
                     Headers = headers,
                     UserAgent = userAgent,
-                    ConnectTimeout = timeout * 1000,
+                    Timeout = timeout * 1000,
                     Proxy = webProxy
                 }
         };
@@ -45,12 +45,13 @@ public class DownloaderHelper
         };
 
         using var cts = new CancellationTokenSource();
-        await using var stream = await downloader.DownloadFileTaskAsync(address: url, cts.Token).WaitAsync(TimeSpan.FromSeconds(timeout), cts.Token);
+        cts.CancelAfter(TimeSpan.FromSeconds(timeout));
+        await using var stream = await downloader.DownloadFileTaskAsync(address: url, cts.Token);
         using StreamReader reader = new(stream);
 
         downloadOpt = null;
 
-        return await reader.ReadToEndAsync(cts.Token);
+        return await reader.ReadToEndAsync();
     }
 
     public async Task DownloadDataAsync4Speed(IWebProxy webProxy, string url, IProgress<string> progress, int timeout)
@@ -62,11 +63,11 @@ public class DownloaderHelper
 
         var downloadOpt = new DownloadConfiguration()
         {
-            BlockTimeout = timeout * 1000,
+            Timeout = timeout * 1000,
             MaxTryAgainOnFailure = 2,
             RequestConfiguration =
                 {
-                    ConnectTimeout= timeout * 1000,
+                    Timeout= timeout * 1000,
                     Proxy = webProxy
                 }
         };
@@ -139,11 +140,11 @@ public class DownloaderHelper
 
         var downloadOpt = new DownloadConfiguration()
         {
-            BlockTimeout = timeout * 1000,
+            Timeout = timeout * 1000,
             MaxTryAgainOnFailure = 2,
             RequestConfiguration =
                 {
-                    ConnectTimeout= timeout * 1000,
+                    Timeout= timeout * 1000,
                     Proxy = webProxy
                 }
         };
