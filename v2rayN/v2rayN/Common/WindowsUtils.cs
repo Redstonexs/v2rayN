@@ -64,12 +64,24 @@ internal static class WindowsUtils
 
     private static void SetDarkBorder(Window window, bool dark)
     {
-        // Make sure the handle is created before the window is shown
-        var hWnd = new WindowInteropHelper(window).EnsureHandle();
-        var attribute = dark ? 1 : 0;
-        var attributeSize = (uint)Marshal.SizeOf(attribute);
-        DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref attribute, attributeSize);
-        DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, ref attribute, attributeSize);
+        if (!Utils.IsWindows10OrGreater())
+        {
+            return;
+        }
+
+        try
+        {
+            // Make sure the handle is created before the window is shown.
+            var hWnd = new WindowInteropHelper(window).EnsureHandle();
+            var attribute = dark ? 1 : 0;
+            var attributeSize = (uint)Marshal.SizeOf(attribute);
+            _ = DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref attribute, attributeSize);
+            _ = DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, ref attribute, attributeSize);
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(_tag, ex);
+        }
     }
 
     private static bool IsDarkTheme()

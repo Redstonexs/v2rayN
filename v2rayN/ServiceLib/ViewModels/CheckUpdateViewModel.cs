@@ -36,12 +36,12 @@ public class CheckUpdateViewModel : MyReactiveObject
     private void RefreshCheckUpdateItems()
     {
         CheckUpdateModels.Clear();
+        var legacyWindows = Utils.IsLegacyWindows();
 
         if (RuntimeInformation.ProcessArchitecture != Architecture.X86)
         {
-            CheckUpdateModels.Add(GetCheckUpdateModel(_v2rayN));
-            //Not Windows and under Win10
-            if (!(Utils.IsWindows() && Environment.OSVersion.Version.Major < 10))
+            CheckUpdateModels.Add(GetCheckUpdateModel(_v2rayN, legacyWindows));
+            if (!legacyWindows)
             {
                 CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.Xray.ToString()));
                 CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.mihomo.ToString()));
@@ -51,7 +51,7 @@ public class CheckUpdateViewModel : MyReactiveObject
         CheckUpdateModels.Add(GetCheckUpdateModel(_geo));
     }
 
-    private CheckUpdateModel GetCheckUpdateModel(string coreType)
+    private CheckUpdateModel GetCheckUpdateModel(string coreType, bool unsupportedOnLegacyWindows = false)
     {
         if (coreType == _v2rayN && Utils.IsPackagedInstall())
         {
@@ -60,6 +60,16 @@ public class CheckUpdateViewModel : MyReactiveObject
                 IsSelected = false,
                 CoreType = coreType,
                 Remarks = ResUI.menuCheckUpdate + " (Not Support)",
+            };
+        }
+
+        if (coreType == _v2rayN && unsupportedOnLegacyWindows)
+        {
+            return new()
+            {
+                IsSelected = false,
+                CoreType = coreType,
+                Remarks = ResUI.menuCheckUpdate + " (Not Support on Windows < 10)",
             };
         }
 
@@ -104,9 +114,9 @@ public class CheckUpdateViewModel : MyReactiveObject
             }
             else if (item.CoreType == _v2rayN)
             {
-                if (Utils.IsPackagedInstall())
+                if (Utils.IsPackagedInstall() || Utils.IsLegacyWindows())
                 {
-                    await UpdateView(_v2rayN, "Not Support");
+                    await UpdateView(_v2rayN, Utils.IsLegacyWindows() ? "Not Support on Windows < 10" : "Not Support");
                     continue;
                 }
                 await CheckUpdateN(EnableCheckPreReleaseUpdate);

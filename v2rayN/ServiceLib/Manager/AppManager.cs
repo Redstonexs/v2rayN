@@ -68,8 +68,8 @@ public sealed class AppManager
         _config = config;
         Thread.CurrentThread.CurrentUICulture = new(_config.UiItem.CurrentLanguage);
 
-        //Under Win10
-        if (Utils.IsWindows() && Environment.OSVersion.Version.Major < 10)
+        // Keep the legacy Windows workaround enabled for custom builds that still run on Win7/8.x.
+        if (Utils.IsLegacyWindows())
         {
             Environment.SetEnvironmentVariable("DOTNET_EnableWriteXorExecute", "0", EnvironmentVariableTarget.User);
         }

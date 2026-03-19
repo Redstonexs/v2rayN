@@ -5,7 +5,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>12.0</LangVersion>
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <NoWarn>CA1031;CS1591;NU1507;CA1416;IDE0058;IDE0053;IDE0200</NoWarn>

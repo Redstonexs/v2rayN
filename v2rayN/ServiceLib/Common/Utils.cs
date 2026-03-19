@@ -1099,11 +1099,15 @@ public class Utils
 
     public static bool IsWindows() => OperatingSystem.IsWindows();
 
+    public static bool IsWindows10OrGreater() => OperatingSystem.IsWindowsVersionAtLeast(10);
+
     public static bool IsLinux() => OperatingSystem.IsLinux();
 
     public static bool IsMacOS() => OperatingSystem.IsMacOS();
 
     public static bool IsNonWindows() => !OperatingSystem.IsWindows();
+
+    public static bool IsLegacyWindows() => IsWindows() && !IsWindows10OrGreater();
 
     public static string GetExeName(string name)
     {
